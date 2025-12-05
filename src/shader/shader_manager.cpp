@@ -1,4 +1,5 @@
 #include "shader_manager.h"
+#include "util.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace hack_game {
@@ -33,8 +34,10 @@ namespace hack_game {
 		mainShader.setUniform("lightPos",   lightPos);
 
 		Shader& postprocessing = shaders.at("postprocessing");
-		postprocessing.setUniform("screenTexture", 0);
-		postprocessing.setUniform("progress", 0.0f);
+		postprocessing.use();
+		postprocessing.setUniform("sceneTexture", 0);
+		postprocessing.setUniform("guiTexture", 1);
+		postprocessing.setUniform("seed", randomInt32());
 
 		for (auto& entry : shaders) {
 			entry.second.use();
@@ -46,6 +49,8 @@ namespace hack_game {
 	}
 
 	void ShaderManager::updateWindowSize(GLint width, GLint height) {
-		shaders.at("postprocessing").setUniform("pixelSize", vec2(1.0f / width, 1.0f / height));
+		Shader& postprocessing = shaders.at("postprocessing");
+		postprocessing.use();
+		postprocessing.setUniform("pixelSize", vec2(1.0f / width, 1.0f / height));
 	}
 }

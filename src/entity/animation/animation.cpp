@@ -31,7 +31,7 @@ namespace hack_game {
 
 	void Animation::draw() const {
 		shader.setUniform("centerPos", getPos());
-		shader.setUniform("progress", time / duration);
+		shader.setUniform("progress", getProgress());
 		SimpleEntity::draw();
 	}
 

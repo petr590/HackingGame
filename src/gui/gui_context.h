@@ -1,30 +1,40 @@
-#ifndef HACK_GAME__CONTEXT__GUI_CONTEXT_H
-#define HACK_GAME__CONTEXT__GUI_CONTEXT_H
+#ifndef HACK_GAME__GUI__GUI_CONTEXT_H
+#define HACK_GAME__GUI__GUI_CONTEXT_H
 
 #include "imgui_util.h"
+#include "gl_fwd.h"
 
 namespace hack_game {
 
 	class GuiContext {
-		float deltaTime = 0;
 		ImVec2 scale = {1, 1};
+		float deltaTime = 0;
+		const GLuint pointerTextureId;
 	
 	public:
+		GuiContext();
+
+		const ImVec2& getScale() const noexcept {
+			return scale;
+		}
+
 		float getDeltaTime() const noexcept {
 			return deltaTime;
 		}
 
-		const ImVec2& getScale() const noexcept {
-			return scale;
+		GLuint getPointerTextureId() const noexcept {
+			return pointerTextureId;
+		}
+
+
+		void setScale(const ImVec2& scale) noexcept {
+			this->scale = scale;
 		}
 
 		void setDeltaTime(float deltaTime) noexcept {
 			this->deltaTime = deltaTime;
 		}
 
-		void setScale(const ImVec2& scale) noexcept {
-			this->scale = scale;
-		}
 
 		float scaleX(float x) const noexcept {
 			return x * scale.x;

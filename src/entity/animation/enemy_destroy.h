@@ -1,18 +1,16 @@
 #ifndef HACK_GAME__ENTITY__ANIMATION__ENEMY_DESTROY_H
 #define HACK_GAME__ENTITY__ANIMATION__ENEMY_DESTROY_H
 
-#include "billboard_animation.h"
+#include "flat_and_billboard_animation.h"
 #include <vector>
 
 namespace hack_game {
 
-	class EnemyDestroyAnimation: public BillboardAnimation {
+	class EnemyDestroyAnimation: public FlatAndBillboardAnimation {
 	public:
 		class Cube;
 
 	private:
-		Shader& billboardShader;
-		Shader& flatShader;
 		Shader& particleShader;
 
 		std::vector<Cube> fadingCubes;
@@ -23,13 +21,14 @@ namespace hack_game {
 
 	public:
 		EnemyDestroyAnimation(std::shared_ptr<const EntityWithPos>&&, ShaderManager&) noexcept;
-		~EnemyDestroyAnimation() noexcept;
+		~EnemyDestroyAnimation();
 
 		void tick(Level&) override;
 		void draw() const override;
 	
 	protected:
 		void onRemove(Level&) override;
+		void setFlatShaderUniforms() const override;
 	};
 }
 

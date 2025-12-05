@@ -9,19 +9,20 @@ namespace hack_game {
 	class Level;
 
 
-	/// Вектор нормали угла в 2d. От него сичитается угол
-	constexpr glm::vec2 ANGLE_NORMAL{0.0f, 1.0f};
+	/// @brief Вектор нормали угла в 2d. От него сичитается угол
+	constexpr glm::vec2 ANGLE_NORMAL = {0.0f, 1.0f};
 
-	/// Эпсилон для рассчётов коллизии
+	/// @brief Эпсилон для рассчётов коллизии
 	constexpr float EPSILON = 1e-6f;
 
 
 	/**
+	 * @brief
 	 * Переводит значение value из диапазона [srcStart; srcEnd] в диапазон [dstStart; dstEnd].
 	 * Работает со значениями за пределами исходного диапазона
 	 * @return Масштабированное значение в диапазоне [dstStart; dstEnd], если исходное в диапазоне [srcStart; srcEnd]
 	 */
-	static constexpr float zoom(float value, float srcStart, float srcEnd, float dstStart, float dstEnd) {
+	constexpr float zoom(float value, float srcStart, float srcEnd, float dstStart, float dstEnd) {
 		return dstStart + (value - srcStart) * (dstEnd - dstStart) / (srcEnd - srcStart);
 	}
 
@@ -30,7 +31,7 @@ namespace hack_game {
 	 * Работает со значениями за пределами исходного диапазона
 	 * @return Масштабированное значение в диапазоне [0.0f; 1.0f], если исходное в диапазоне [srcStart; srcEnd]
 	 */
-	static constexpr float invLerp(float a, float b, float t) {
+	constexpr float invLerp(float a, float b, float t) {
 		return (t - a) / (b - a);
 	}
 
@@ -56,7 +57,7 @@ namespace hack_game {
 
 
 	/**
-	 * Разрешает коллизию точки с блоками на карте
+	 * @brief Разрешает коллизию точки с блоками на карте
 	 * @param level уровень для получения блока
 	 * @param pos позиция точки на плоскости
 	 * @param offset смещение точки
@@ -73,10 +74,14 @@ namespace hack_game {
 	 */
 	int randomBetween(int low, int high);
 
+	/// @brief Генерирует рандомное значение в диапазоне от low до high.
 	float randomBetween(float low, float high);
 	
+	/// @brief Генерирует рандомный вектор в диапазоне от low до high.
 	glm::vec3 randomBetween(const glm::vec3& low, const glm::vec3& high);
 
+	/// @brief Генерирует рандомный int32_t с лучшим разпределением, чем у стандартного rand().
+	/// Гарантируется, что все 32 бита заполнены случайно
 	int32_t randomInt32();
 }
 

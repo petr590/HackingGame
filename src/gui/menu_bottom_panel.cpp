@@ -22,18 +22,18 @@ namespace hack_game {
 
 		constexpr float OFFSET = Menu::SHADOW_OFFSET;
 		drawList->AddRectFilled(context.scaleVec(panelStart + OFFSET), context.scaleVec(panelEnd + OFFSET), Menu::SHADOW_COLOR);
-		drawList->AddRectFilled(context.scaleVec(panelStart),          context.scaleVec(panelEnd),          Menu::PANEL_COLOR);
+		drawList->AddRectFilled(context.scaleVec(panelStart),          context.scaleVec(panelEnd),          Menu::LIGHT_COLOR);
 
 		drawList->AddRectFilled(
 			context.scaleVec(panelStart.x + Menu::STRIPE1_START, panelStart.y),
 			context.scaleVec(panelStart.x + Menu::STRIPE1_END,   panelEnd.y),
-			Menu::SELECTION_COLOR
+			Menu::DARK_COLOR
 		);
 
 		drawList->AddRectFilled(
 			context.scaleVec(panelStart.x + Menu::STRIPE2_START, panelStart.y),
 			context.scaleVec(panelStart.x + Menu::STRIPE2_END,   panelEnd.y),
-			Menu::SELECTION_COLOR
+			Menu::DARK_COLOR
 		);
 
 		ImGui::SetCursorPos(context.scaleVec(panelStart + PADDING));

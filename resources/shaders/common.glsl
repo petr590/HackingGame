@@ -1,5 +1,3 @@
-#version 330 core
-
 #define GRAY(rgb, alp) vec4(rgb, rgb, rgb, alp)
 
 vec4 blend(vec4 color1, vec4 color2) {
@@ -27,18 +25,24 @@ vec2 rotate(vec2 vec, float angleSin, float angleCos) {
 
 
 float simpleNoise(int seed, int x) {
-	int h = x * 668265263 + seed * 9871;
+	int h = seed * 9871 + x * 668265263;
 	h = (h ^ (h >> 13)) * 1274126177;
 	h = h ^ (h >> 16);
-	
 	return h * (1.0 / 0x80000000u);
 }
 
 
 float simpleNoise(int seed, ivec2 vec) {
-	int h = vec.x * 374761393 + vec.y * 668265263 + seed * 9871;
+	int h = seed * 9871 + vec.x * 668265263 + vec.y * 374761393;
 	h = (h ^ (h >> 13)) * 1274126177;
 	h = h ^ (h >> 16);
-	
+	return h * (1.0 / 0x80000000u);
+}
+
+
+float simpleNoise(int seed, ivec3 vec) {
+	int h = seed * 9871 + vec.x * 668265263 + vec.y * 374761393 + vec.z * 310248241;
+	h = (h ^ (h >> 13)) * 1274126177;
+	h = h ^ (h >> 16);
 	return h * (1.0 / 0x80000000u);
 }

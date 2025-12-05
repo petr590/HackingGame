@@ -21,29 +21,31 @@ namespace hack_game {
 	using std::endl;
 
 
-	static const GLsizei SAMPLES = 4;
-	static WindowData* windowData = nullptr;
+	static const GLint SAMPLES = 4;
+	static const char* const GLSL_VERSION = "#version 330 core";
 
-	const WindowData& WindowData::getInstance() {
-		static WindowData instance;
-		windowData = &instance;
+	static RenderContext* renderContext = nullptr;
+
+	const RenderContext& RenderContext::getInstance() {
+		static RenderContext instance;
+		renderContext = &instance;
 		return instance;
 	}
 
 
 	static const GLFWvidmode* initGLFW();
-	static GLFWwindow* initWindow(int width, int height);
+	static GLFWwindow* initWindow(GLint width, GLint height);
 	static void initGLEW();
-	static void initImGui(GLFWwindow*);
+	static ImGuiContext* createImGuiContext(GLFWwindow*, bool isMain);
 
 	static void shutdownImGui();
 	static void shutdownGLFW(GLFWwindow*);
 	
-	static FramebufferInfo initGL(GLFWwindow* window, int windowWidth, int windowHeight);
-	static void framebufferSizeCallback(GLFWwindow* window, int width, int height);
+	static FramebufferInfo initGL(GLFWwindow* window, GLint windowWidth, GLint windowHeight);
+	static void framebufferSizeCallback(GLFWwindow* window, GLint width, GLint height);
 
 
-	WindowData::WindowData() {
+	RenderContext::RenderContext() {
 		const GLFWvidmode* mode = initGLFW();
 		windowWidth = mode->width;
 		windowHeight = mode->height;
@@ -51,12 +53,16 @@ namespace hack_game {
 
 		window = initWindow(windowWidth, windowHeight);
 		initGLEW();
-		initImGui(window);
+
+		IMGUI_CHECKVERSION();
+		imGuiMainContext = createImGuiContext(window, true);
+		imGuiFpsContext = createImGuiContext(window, false);
+		ImGui::SetCurrentContext(imGuiMainContext);
 
 		fbInfo = initGL(window, windowWidth, windowHeight);
 	}
 
-	WindowData::~WindowData() {
+	RenderContext::~RenderContext() {
 		shutdownImGui();
 		shutdownGLFW(window);
 	}
@@ -79,7 +85,7 @@ namespace hack_game {
 	}
 
 
-	static GLFWwindow* initWindow(int width, int height) {
+	static GLFWwindow* initWindow(GLint width, GLint height) {
 		
 		GLFWwindow* window = glfwCreateWindow(width, height, "Hacking Game", nullptr, nullptr);
 		if (window == nullptr) {
@@ -103,28 +109,32 @@ namespace hack_game {
 			exit(EXIT_FAILURE);
 		}
 	}
-	
-	static void initImGui(GLFWwindow* window) {
 
-		IMGUI_CHECKVERSION();
-		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO();
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // TODO?
+	
+	static ImGuiContext* createImGuiContext(GLFWwindow* window, bool isMain) {
+		ImGuiContext* context = ImGui::CreateContext();
+		ImGui::SetCurrentContext(context);
 
 		ImGui::StyleColorsDark();
-
 		const float mainScale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
 
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.ScaleAllSizes(mainScale);
 		style.FontScaleDpi = mainScale;
 		style.FontSizeBase = 35.0f;
-		ImFont* font = io.Fonts->AddFontFromFileTTF("resources/fonts/TikTok_Sans_Regular.ttf");
+
+		ImFont* font = ImGui::GetIO().Fonts->AddFontFromFileTTF("resources/fonts/TikTok_Sans_Regular.ttf");
     	IM_ASSERT(font != nullptr);
 
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init("#version 330 core");
+		if (!isMain) {
+			ImGui::GetIO().WantCaptureKeyboard = false;
+			ImGui::GetIO().WantCaptureMouse = false;
+		}
+
+		ImGui_ImplGlfw_InitForOpenGL(window, isMain);
+		ImGui_ImplOpenGL3_Init(GLSL_VERSION);
+
+		return context;
 	}
 	
 
@@ -140,19 +150,20 @@ namespace hack_game {
 	}
 
 
-	static void generateMultisampleBuffer(FramebufferInfo& fbInfo, int windowWidth, int windowHeight) {
-		GLuint framebuffer;
+	static void generateSceneMsBuffer(FramebufferInfo& fbInfo, GLint windowWidth, GLint windowHeight) {
+		GLuint& framebuffer  = fbInfo.sceneFramebuffer;
+		GLuint& renderbuffer = fbInfo.sceneRenderbuffer;
+		GLuint& texture      = fbInfo.sceneMsTexture;
+
 		glGenFramebuffers(1, &framebuffer);
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
-		GLuint texture;
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture);
 		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, SAMPLES, GL_RGBA, windowWidth, windowHeight, GL_TRUE);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, texture, 0);
 
-		GLuint renderbuffer;
 		glGenRenderbuffers(1, &renderbuffer);
 		glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
 		glRenderbufferStorageMultisample(GL_RENDERBUFFER, SAMPLES, GL_DEPTH_COMPONENT24, windowWidth, windowHeight);
@@ -161,19 +172,16 @@ namespace hack_game {
 
 		assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		fbInfo.msFramebuffer = framebuffer;
-		fbInfo.msTexture = texture;
-		fbInfo.msRenderbuffer = renderbuffer;
 	}
 
 
-	static void generateFramebuffer(FramebufferInfo& fbInfo, int windowWidth, int windowHeight) {
-		GLuint framebuffer;
+	static void generateSceneNoMsBuffer(FramebufferInfo& fbInfo, GLint windowWidth, GLint windowHeight) {
+		GLuint& framebuffer = fbInfo.sceneNoMsFramebuffer;
+		GLuint& texture     = fbInfo.sceneNoMsTexture;
+
 		glGenFramebuffers(1, &framebuffer);
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-		
-		GLuint texture;
+
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowWidth, windowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
@@ -186,13 +194,32 @@ namespace hack_game {
 
 		assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		fbInfo.framebuffer = framebuffer;
-		fbInfo.texture = texture;
 	}
 
 
-	static FramebufferInfo initGL(GLFWwindow* window, int windowWidth, int windowHeight) {
+	static void generateImGuiBuffer(FramebufferInfo& fbInfo, GLint windowWidth, GLint windowHeight) {
+		GLuint& framebuffer = fbInfo.imGuiFramebuffer;
+		GLuint& texture     = fbInfo.imGuiTexture;
+
+		glGenFramebuffers(1, &framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+		glGenTextures(1, &texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowWidth, windowHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+
+		assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+
+	static FramebufferInfo initGL(GLFWwindow* window, GLint windowWidth, GLint windowHeight) {
 		for (Model* model : Model::getModels()) {
 			model->generateVertexArray();
 		}
@@ -204,32 +231,37 @@ namespace hack_game {
 		glViewport(0, 0, width, height);
 		
 		FramebufferInfo fbInfo;
-		generateMultisampleBuffer(fbInfo, windowWidth, windowHeight);
-		generateFramebuffer(fbInfo, windowWidth, windowHeight);
+		generateSceneMsBuffer(fbInfo, windowWidth, windowHeight);
+		generateSceneNoMsBuffer(fbInfo, windowWidth, windowHeight);
+		generateImGuiBuffer(fbInfo, windowWidth, windowHeight);
 		return fbInfo;
 	}
 
 
-	static void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
-		windowData->setWindowWidth(width);
-		windowData->setWindowHeight(height);
+	static void framebufferSizeCallback(GLFWwindow* window, GLint width, GLint height) {
+		renderContext->setWindowWidth(width);
+		renderContext->setWindowHeight(height);
 
-		const FramebufferInfo& fbInfo = windowData->getFbInfo();
+		const FramebufferInfo& fbInfo = renderContext->getFbInfo();
 
 		GLint fbWidth, fbHeight;
 		glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
 		glViewport(0, 0, fbWidth, fbHeight);
 		
-		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, fbInfo.msTexture);
+		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, fbInfo.sceneMsTexture);
 		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, SAMPLES, GL_RGBA, width, height, GL_TRUE);
 		glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
-		glBindRenderbuffer(GL_RENDERBUFFER, fbInfo.msRenderbuffer);
+		glBindRenderbuffer(GL_RENDERBUFFER, fbInfo.sceneRenderbuffer);
 		glRenderbufferStorageMultisample(GL_RENDERBUFFER, SAMPLES, GL_DEPTH_COMPONENT24, width, height);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-		glBindTexture(GL_TEXTURE_2D, fbInfo.texture);
+		glBindTexture(GL_TEXTURE_2D, fbInfo.sceneNoMsTexture);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glBindTexture(GL_TEXTURE_2D, fbInfo.imGuiTexture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		onChangeWindowSize(width, height);

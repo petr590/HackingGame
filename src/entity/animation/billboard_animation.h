@@ -5,6 +5,9 @@
 
 namespace hack_game {
 
+	/**
+	 * @brief Поворачивает модель в сторону камеры
+	 */
 	class BillboardAnimation: public Animation {
 		glm::mat4 view {0.0f};
 		

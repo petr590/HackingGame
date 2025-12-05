@@ -15,7 +15,7 @@ namespace hack_game {
 	public:
 		ColoredModel(uint32_t color, const char* relativePath);
 		ColoredModel(uint32_t color, const ColoredModel&);
-		~ColoredModel() noexcept;
+		~ColoredModel();
 
 		const glm::vec3& getColor() const noexcept {
 			return color;

@@ -53,16 +53,16 @@ set_source_files_properties(${IMGUI_SOURCES} PROPERTIES COMPILE_FLAGS "-w")
 
 add_executable(main
 	${IMGUI_SOURCES}
-	
-	src/start.cpp
-	src/init.cpp
-	src/main.cpp
-	src/render.cpp
-	src/globals.cpp
 	src/imgui_util.cpp
 	src/texture.cpp
 	src/util.cpp
 	src/debug.cpp
+
+	src/main/start.cpp
+	src/main/init.cpp
+	src/main/main.cpp
+	src/main/render.cpp
+	src/main/globals.cpp
 
 	src/model/model.cpp
 	src/model/models.cpp
@@ -90,14 +90,20 @@ add_executable(main
 
 	src/entity/animation/animation.cpp
 	src/entity/animation/billboard_animation.cpp
+	src/entity/animation/flat_and_billboard_animation.cpp
 	src/entity/animation/enemy_damage.cpp
 	src/entity/animation/enemy_destroy.cpp
 	src/entity/animation/minion_destroy.cpp
 	src/entity/animation/player_damage.cpp
+	src/entity/animation/player_destroy.cpp
 
+	src/gui/gui_context.cpp
+	src/gui/fading_object.cpp
 	src/gui/menu.cpp
-	src/gui/menu_bottom_panel.cpp
 	src/gui/menu_select.cpp
+	src/gui/menu_bottom_panel.cpp
+	src/gui/system_message_popup.cpp
+	src/gui/win_screen.cpp
 )
 
 target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/imgui)

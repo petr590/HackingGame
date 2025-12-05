@@ -2,11 +2,11 @@
 #include "enemy.h"
 #include "bullet.h"
 #include "animation/player_damage.h"
+#include "animation/player_destroy.h"
 #include "model/models.h"
 #include "shader/shader_manager.h"
 #include "level/level.h"
-#include "scancodes.h"
-#include "globals.h"
+#include "main/globals.h"
 #include "util.h"
 
 #include <GLFW/glfw3.h>
@@ -27,6 +27,8 @@ namespace hack_game {
 	using glm::vec3;
 	using glm::mat4;
 	using glm::quat;
+
+	using shared_entity = std::enable_shared_from_this<Entity>;
 
 	static const float PAD = 0.015f;
 	static const float ROTATE_SPEED = 360 * 3;
@@ -54,7 +56,7 @@ namespace hack_game {
 	}
 
 	std::shared_ptr<const Player> Player::shared_from_this() const {
-		return std::dynamic_pointer_cast<const Player>(std::enable_shared_from_this<Entity>::shared_from_this());
+		return std::dynamic_pointer_cast<const Player>(shared_entity::shared_from_this());
 	}
 
 	void Player::updateAngle(float newTargetAngle) {
@@ -277,7 +279,7 @@ namespace hack_game {
 
 
 	bool Player::hasCollision(const vec3& point) const {
-		return isPointInsideSphere(point, pos, Enemy::RADIUS);
+		return isPointInsideSphere(point, pos, RADIUS);
 	}
 
 
@@ -313,7 +315,12 @@ namespace hack_game {
 	void Player::damage(Level& level, hp_t damage) {
 		Damageable::damage(level, damage);
 
-		if (!destroyed() && (animation == nullptr || animation->isFinished())) {
+		if (destroyed()) {
+			animation = make_shared<PlayerDestroyAnimation>(std::move(shared_from_this()), shaderManager);
+			level.addEntity(animation);
+			level.removeEntity(shared_entity::shared_from_this());
+
+		} else if (animation == nullptr || animation->isFinished()) {
 			animation = make_shared<PlayerDamageAnimation>(std::move(shared_from_this()), shaderManager);
 			level.addEntity(animation);
 		}

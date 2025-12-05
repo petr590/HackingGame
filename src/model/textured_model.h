@@ -19,7 +19,7 @@ namespace hack_game {
 
 	public:
 		TexturedModel(const char* relativeModelPath, std::initializer_list<const char*> relativeTexturePaths);
-		~TexturedModel() noexcept;
+		~TexturedModel();
 
 		void draw(Shader&) const override;
 

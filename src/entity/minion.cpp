@@ -32,14 +32,17 @@ namespace hack_game {
 
 	
 	void Minion::tick(Level& level) {
-		float newAngle = horizontalAngleBetween(pos, level.getPlayer()->getPos());
-		if (!isnan(newAngle))
-			angle = newAngle;
-		
-		vec2 offset = glm::rotate(level.getDeltaTime() * MINION_SPEED * ANGLE_NORMAL, angle);
-		offset = resolveBlockCollision(level, vec2(pos.x, pos.z), offset);
-		pos += vec3(offset.x, 0, offset.y);
+		if (!level.getPlayer()->destroyed()) {
+			float newAngle = horizontalAngleBetween(pos, level.getPlayer()->getPos());
+			if (!isnan(newAngle))
+				angle = newAngle;
+			
+			vec2 offset = glm::rotate(level.getDeltaTime() * MINION_SPEED * ANGLE_NORMAL, angle);
+			offset = resolveBlockCollision(level, vec2(pos.x, pos.z), offset);
+			pos += vec3(offset.x, 0, offset.y);
+		}
 
+		if (level.getPlayer()->destroyed()) return;
 
 		time += level.getDeltaTime();
 

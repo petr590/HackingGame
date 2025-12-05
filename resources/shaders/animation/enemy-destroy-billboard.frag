@@ -1,3 +1,6 @@
+#version 330 core
+#include "common.glsl"
+
 uniform vec3 centerPos;
 uniform float progress;
 uniform sampler2D texture0;

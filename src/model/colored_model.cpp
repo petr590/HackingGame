@@ -97,7 +97,7 @@ namespace hack_game {
 		vertices(model.vertices),
 		color(colorAsVec3(color)) {}
 	
-	ColoredModel::~ColoredModel() noexcept {}
+	ColoredModel::~ColoredModel() {}
 
 
 	GLuint ColoredModel::createVertexArray() {

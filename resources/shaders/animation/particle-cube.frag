@@ -1,3 +1,6 @@
+#version 330 core
+#include "common.glsl"
+
 uniform float alpha;
 uniform uint mode;
 

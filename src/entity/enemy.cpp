@@ -6,7 +6,7 @@
 #include "model/models.h"
 #include "shader/shader_manager.h"
 #include "level/level.h"
-#include "globals.h"
+#include "main/globals.h"
 #include "util.h"
 
 #include <glm/gtx/vector_angle.hpp>

@@ -17,7 +17,7 @@ namespace hack_game {
 		}
 	}
 
-	Texture::~Texture() noexcept {
+	Texture::~Texture() {
 		if (data != nullptr) {
 			SOIL_free_image_data(data);
 		}

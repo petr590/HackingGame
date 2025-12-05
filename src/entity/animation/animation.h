@@ -18,10 +18,23 @@ namespace hack_game {
 		float time = 0;
 
 	public:
-		Animation(std::shared_ptr<const EntityWithPos>&&, Shader&, float duration, float size, float yOffset, Model& = models::plane) noexcept;
+		/**
+		 * @brief Инициализирует объект анимации.
+		 * @param entity сущность, к которой привязана анимация. Необхдимо для корректного получения позиции
+		 * @param shader шейдер для отрисовки модели. Если используется несколько шейдеров, необходимо указать nullShader
+		 * @param duration время жизни анимации
+		 * @param size размер модели
+		 * @param yOffset смещение позиции модели по y относительно позиции сущности
+		 * @param model модель, которая будет отрисовываться
+		 */
+		Animation(std::shared_ptr<const EntityWithPos>&& entity, Shader& shader, float duration, float size, float yOffset, Model& = models::plane) noexcept;
 
 		float getTime() const noexcept {
 			return time;
+		}
+
+		float getProgress() const noexcept {
+			return time / duration;
 		}
 
 		bool isFinished() const noexcept {

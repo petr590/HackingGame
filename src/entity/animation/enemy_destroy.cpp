@@ -1,16 +1,15 @@
 #include "enemy_destroy.h"
+#include "cube_particle_mode.h"
 #include "entity/player.h"
 #include "entity/enemy.h"
 #include "shader/shader_manager.h"
 #include "level/level.h"
-#include "cube_particle_mode.h"
-#include "globals.h"
+#include "main/globals.h"
 #include "util.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace hack_game {
 	using std::vector;
-	using std::exp;
 
 	using glm::vec3;
 	using glm::mat4;
@@ -59,16 +58,18 @@ namespace hack_game {
 	// ---------------------------------- EnemyDestroyAnimation -----------------------------------
 
 	EnemyDestroyAnimation::EnemyDestroyAnimation(std::shared_ptr<const EntityWithPos>&& entity, ShaderManager& shaderManager) noexcept:
-			BillboardAnimation(std::move(entity), shaderManager.nullShader, DURATION, SIZE, Enemy::RADIUS, models::enemyDestroyBillboard),
-			billboardShader (shaderManager.getShader("enemyDestroyBillboard")),
-			flatShader      (shaderManager.getShader("enemyDestroyFlat")),
+			FlatAndBillboardAnimation(
+				std::move(entity), shaderManager,
+				shaderManager.getShader("enemyDestroyFlat"), shaderManager.getShader("enemyDestroyBillboard"),
+				DURATION, SIZE, Enemy::RADIUS, models::enemyDestroyBillboard
+			),
 			particleShader  (shaderManager.getShader("particleCube")),
 			seed            (randomInt32()) {
 		
 		destroyAnimationCount += 1;
 	}
 
-	EnemyDestroyAnimation::~EnemyDestroyAnimation() noexcept {}
+	EnemyDestroyAnimation::~EnemyDestroyAnimation() {}
 
 
 	void EnemyDestroyAnimation::onRemove(Level&) {
@@ -160,7 +161,7 @@ namespace hack_game {
 			mat4 modelMat = glm::scale(cube.modelMat, vec3(cube.scale * std::lerp(1.0f, minScale, progress)));
 			
 			particleShader.setModel(modelMat);
-			particleShader.setUniform("alpha", exp(-6.0f * progress));
+			particleShader.setUniform("alpha", std::exp(-6.0f * progress));
 
 			model.draw(particleShader);
 		}
@@ -168,25 +169,7 @@ namespace hack_game {
 	
 
 	void EnemyDestroyAnimation::draw() const {
-		const float progress = time / duration;
-		const vec3 centerPos = getPos();
-
-		flatShader.use();
-		flatShader.setView(getView());
-		flatShader.setModel(Animation::getModelTransform());
-		flatShader.setUniform("centerPos", centerPos);
-		flatShader.setUniform("progress", progress);
-		flatShader.setUniform("seed", seed);
-		model.draw(flatShader);
-		
-
-		billboardShader.use();
-		billboardShader.setView(getView());
-		billboardShader.setModel(getModelTransform());
-		billboardShader.setUniform("centerPos", centerPos);
-		billboardShader.setUniform("progress", progress);
-		model.draw(billboardShader);
-
+		FlatAndBillboardAnimation::draw();
 
 		if (time >= CUBES_START && (!fadingCubes.empty() || !solidCubes.empty() || !frameCubes.empty())) {
 			particleShader.use();
@@ -196,5 +179,9 @@ namespace hack_game {
 			drawCubes(particleShader, solidCubes,  Mode::SOLID,  models::blackCube, 0.9f);
 			drawCubes(particleShader, frameCubes,  Mode::SOLID,  models::cubeFrame, 0.8f);
 		}
+	}
+
+	void EnemyDestroyAnimation::setFlatShaderUniforms() const {
+		flatShader.setUniform("seed", seed);
 	}
 }

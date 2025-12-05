@@ -6,19 +6,18 @@
 namespace hack_game {
 	namespace models {
 
-		extern ColoredModel
-				plane,    /// Прямоугольник от (-1, 0, -1) до (1, 0, 1)
-				platform, /// Прямоугольник от (0, 0, 0) до (1, 0, 1)
+		extern ColoredModel	plane;    /// Прямоугольник от (-1, 0, -1) до (1, 0, 1)
+		extern ColoredModel	platform; /// Прямоугольник от (0, 0, 0) до (1, 0, 1)
 
-				blackCube,       /// Чёрный куб
-				breakableCube,   /// Куб, который возможно сломать снарядами игрока
-				unbreakableCube, /// Куб, который невозможно сломать снарядами игрока
-
-				sphere,            /// Сфера, которая представляет Enemy
-				breakableSphere,   /// Снаряд Enemy, который может быть уничтожен снарядом игрока
-				unbreakableSphere, /// Снаряд Enemy, который не может быть уничтожен снарядом игрока
-				playerBullet,      /// Модель снаряда игрока
-				minion;            /// Модель Minion
+		extern ColoredModel	blackCube;       /// Чёрный куб
+		extern ColoredModel	breakableCube;   /// Куб, который возможно сломать снарядами игрока
+		extern ColoredModel	unbreakableCube; /// Куб, который невозможно сломать снарядами игрока
+		
+		extern ColoredModel	sphere;            /// Сфера, которая представляет Enemy
+		extern ColoredModel	breakableSphere;   /// Снаряд Enemy, который может быть уничтожен снарядом игрока
+		extern ColoredModel	unbreakableSphere; /// Снаряд Enemy, который не может быть уничтожен снарядом игрока
+		extern ColoredModel	playerBullet;      /// Модель снаряда игрока
+		extern ColoredModel	minion;            /// Модель Minion
 
 		extern Model& player3hp; /// Модель игрока с 3 HP
 		extern Model& player2hp; /// Модель игрока с 2 HP

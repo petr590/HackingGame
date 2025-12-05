@@ -43,13 +43,11 @@ namespace hack_game {
 		uniforms.reserve(count);
 
 		for (GLint i = 0; i < count; i++) {
-			const GLsizei maxNameLen = 16;
+			const GLint maxNameLen = 64;
 			GLchar name[maxNameLen];
-			GLsizei nameLen;
-			GLint size;
 			GLenum type;
 			
-			glGetActiveUniform(id, static_cast<GLuint>(i), maxNameLen, &nameLen, &size, &type, name);
+			glGetActiveUniform(id, static_cast<GLuint>(i), maxNameLen, nullptr, nullptr, &type, name);
 			uniforms.emplace_back(string(name), Uniform(i, type));
 		}
 
@@ -75,17 +73,34 @@ namespace hack_game {
 	Shader::Shader(Shader&& shader):
 			name(shader.name), id(shader.id), uniforms(std::move(shader.uniforms)) {}
 	
-	Shader::~Shader() noexcept {}
+	Shader::~Shader() {}
 
+
+	#ifndef NDEBUG
+	static GLuint lastUsedId = 0;
 
 	void Shader::use() noexcept {
 		glUseProgram(id);
+		lastUsedId = id;
 	}
+	#else
+	void Shader::use() noexcept {
+		glUseProgram(id);
+	}
+	#endif
 
 
 	template<GLenum... types, class Func>
-	static void setUniform0(const char* typeNames, const char* shaderName, const uniforms_t& uniforms, const char* uniformName, bool warn, Func func) {
+	static void setUniform0(const uniforms_t& uniforms, const char* uniformName, Shader& shader, bool warn, Func func, const char* typeNames) {
 		(void)typeNames;
+
+
+		#ifndef NDEBUG
+		if (shader.getId() != lastUsedId) {
+			fprintf(stderr, "Warning: shader \"%s\" was not used before setUniform\n", shader.getName());
+		}
+		#endif
+
 		
 		string_view name = uniformName;
 
@@ -97,49 +112,49 @@ namespace hack_game {
 		if (it != uniforms.end()) {
 		
 			#ifndef NDEBUG
-				const GLenum uniformType = it->second.type;
+			const GLenum uniformType = it->second.type;
 
-				if (((uniformType != types) && ...)) {
-					fprintf(stderr, "Warning: uniform \"%s\" is incompatible with types %s\n", uniformName, typeNames);
-				}
+			if (((uniformType != types) && ...)) {
+				fprintf(stderr, "Warning: uniform \"%s\" is incompatible with types %s\n", uniformName, typeNames);
+			}
 			#endif
 
 			func(it->second.id);
 		} else if (warn) {
-			fprintf(stderr, "Warning: uniform \"%s\" is not found for shader \"%s\"\n", uniformName, shaderName);
+			fprintf(stderr, "Warning: uniform \"%s\" is not found for shader \"%s\"\n", uniformName, shader.getName());
 		}
 	}
 
 	#ifndef NDEBUG
 	#define TEMPLATED_CALL(...) setUniform0<__VA_ARGS__>
-	#define SET_UNIFORM(TEMPLATE_PARAMS, ...) TEMPLATED_CALL TEMPLATE_PARAMS (#TEMPLATE_PARAMS, __VA_ARGS__)
+	#define SET_UNIFORM(TEMPLATE_PARAMS, ...) TEMPLATED_CALL TEMPLATE_PARAMS (__VA_ARGS__, #TEMPLATE_PARAMS)
 	#else
-	#define SET_UNIFORM(TEMPLATE_PARAMS, ...) setUniform0(nullptr, __VA_ARGS__)
+	#define SET_UNIFORM(TEMPLATE_PARAMS, ...) setUniform0(__VA_ARGS__, nullptr)
 	#endif
 
 
 	void Shader::setUniform(const char* uniformName, const mat4& val, bool warn) {
-		SET_UNIFORM((GL_FLOAT_MAT4), name, uniforms, uniformName, warn, [&] (GLint uid) { glUniformMatrix4fv(uid, 1, GL_FALSE, glm::value_ptr(val)); });
+		SET_UNIFORM((GL_FLOAT_MAT4), uniforms, uniformName, *this, warn, [&] (GLint uid) { glUniformMatrix4fv(uid, 1, GL_FALSE, glm::value_ptr(val)); });
 	}
 
 	void Shader::setUniform(const char* uniformName, const vec3& val, bool warn) {
-		SET_UNIFORM((GL_FLOAT_VEC3), name, uniforms, uniformName, warn, [&] (GLint uid) { glUniform3fv(uid, 1, glm::value_ptr(val)); });
+		SET_UNIFORM((GL_FLOAT_VEC3), uniforms, uniformName, *this, warn, [&] (GLint uid) { glUniform3fv(uid, 1, glm::value_ptr(val)); });
 	}
 
 	void Shader::setUniform(const char* uniformName, const vec2& val, bool warn) {
-		SET_UNIFORM((GL_FLOAT_VEC2), name, uniforms, uniformName, warn, [&] (GLint uid) { glUniform2fv(uid, 1, glm::value_ptr(val)); });
+		SET_UNIFORM((GL_FLOAT_VEC2), uniforms, uniformName, *this, warn, [&] (GLint uid) { glUniform2fv(uid, 1, glm::value_ptr(val)); });
 	}
 
 	void Shader::setUniform(const char* uniformName, float val, bool warn) {
-		SET_UNIFORM((GL_FLOAT), name, uniforms, uniformName, warn, [=] (GLint uid) { glUniform1f(uid, val); });
+		SET_UNIFORM((GL_FLOAT), uniforms, uniformName, *this, warn, [=] (GLint uid) { glUniform1f(uid, val); });
 	}
 
 	void Shader::setUniform(const char* uniformName, GLint val, bool warn) {
-		SET_UNIFORM((GL_INT, GL_SAMPLER_1D, GL_SAMPLER_2D, GL_SAMPLER_3D), name, uniforms, uniformName, warn, [=] (GLint uid) { glUniform1i(uid, val); });
+		SET_UNIFORM((GL_INT, GL_SAMPLER_1D, GL_SAMPLER_2D, GL_SAMPLER_3D), uniforms, uniformName, *this, warn, [=] (GLint uid) { glUniform1i(uid, val); });
 	}
 
 	void Shader::setUniform(const char* uniformName, GLuint val, bool warn) {
-		SET_UNIFORM((GL_UNSIGNED_INT), name, uniforms, uniformName, warn, [=] (GLint uid) { glUniform1ui(uid, val); });
+		SET_UNIFORM((GL_UNSIGNED_INT), uniforms, uniformName, *this, warn, [=] (GLint uid) { glUniform1ui(uid, val); });
 	}
 
 

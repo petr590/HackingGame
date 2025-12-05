@@ -29,7 +29,7 @@ namespace hack_game {
 		static constexpr hp_t MAX_HP = 0x7FFFFFFF;
 
 		/**
-		 * Создаёт новую сущность.
+		 *  Создаёт новую сущность.
 		 * @param side сторона, которой принадлежит сущность
 		 * @param hitpoints изначальное количество хп. Для неуязвимости укажите MAX_HP
 		 */
@@ -42,7 +42,7 @@ namespace hack_game {
 		 */
 		virtual bool hasCollision(const glm::vec3& point) const = 0;
 
-		/// Наносит урон по сущности, если она не неуязвимая
+		/// @brief Наносит урон по сущности, если она не неуязвимая
 		virtual void damage(Level&, hp_t damage);
 
 		bool destroyed() const noexcept {

@@ -135,8 +135,10 @@ namespace hack_game {
 			return true;
 		}
 
-		if (hasCollision(level.getPlayer()->getPos())) {
-			level.getPlayer()->damage(level, 1);
+		const auto& player = level.getPlayer();
+
+		if (!player->destroyed() && hasCollision(player->getPos())) {
+			player->damage(level, 1);
 			return true;
 		}
 

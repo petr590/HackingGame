@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <memory>
 
@@ -14,12 +15,16 @@ namespace hack_game {
 	using std::ios;
 	using std::ifstream;
 	using std::streamsize;
-	using std::unique_ptr;
 	using std::make_unique;
+
+	#define COMMON_FILE_NAME "common.glsl"
+	#define COMMON_INCLUDE "#include \"" COMMON_FILE_NAME "\""
 
 	const size_t LOG_SIZE = 512;
 
-	static unique_ptr<const char[]> readFile(const char* path) {
+	static const string& getCommonContent();
+
+	static string readFile(const char* path) {
 		ifstream file(path, ios::ate);
 
 		if (file.fail()) {
@@ -29,30 +34,29 @@ namespace hack_game {
 
 		const streamsize fsize = file.tellg();
 		
-		auto data = make_unique<char[]>(size_t(fsize + 1));
-		data[fsize] = '\0';
+		string content(fsize, '\0');
 		
 		file.seekg(0);
-		file.read(data.get(), fsize);
+		file.read(content.data(), fsize);
 		file.close();
 
-		return data;
+		return content;
 	}
 
-	static GLuint compileShader(GLenum type, const char* path, const unique_ptr<const char[]>& prelude) {
-		unique_ptr<const char[]> source = readFile(path);
+	static GLuint compileShader(GLenum type, const char* path) {
+		string source = readFile(path);
+		size_t includePos = source.find(COMMON_INCLUDE);
+
+		if (includePos != string::npos) {
+			source.replace(includePos, std::size(COMMON_INCLUDE) - 1, getCommonContent());
+		}
+
 		GLuint shader = glCreateShader(type);
 
-		if (prelude != nullptr) {
-			const char* strings[] = { prelude.get(), source.get() };
-			glShaderSource(shader, std::size(strings), strings, nullptr);
+		const char* str = source.c_str();
+		glShaderSource(shader, 1, &str, nullptr);
 
-		} else {
-			const char* string = source.get();
-			glShaderSource(shader, 1, &string, nullptr);
-		}
-		
-		source.reset();
+		source.clear();
 		
 		
 		glCompileShader(shader);
@@ -73,10 +77,10 @@ namespace hack_game {
 
 		} else {
 			const char* strType =
-					type == GL_VERTEX_SHADER ? "VERTEX" :
-					type == GL_FRAGMENT_SHADER ? "FRAGMENT" : "UNKNOWN";
+					type == GL_VERTEX_SHADER ? "vertex" :
+					type == GL_FRAGMENT_SHADER ? "fragment" : "(unknown type)";
 			
-			cerr << "ERROR::SHADER::" << strType << "::COMPILATION_FAILED\n" << log << endl;
+			cerr << "Compilation failed for " << strType << " shader \"" << path << "\":\n" << log << endl;
 			exit(EXIT_FAILURE);
 		}
 		
@@ -84,10 +88,10 @@ namespace hack_game {
 	}
 
 
-	static GLuint createShaderProgram0(const char* vertexShaderPath, const char* fragmentShaderPath, const unique_ptr<const char[]>& prelude) {
+	static GLuint createShaderProgram0(const char* vertexShaderPath, const char* fragmentShaderPath) {
 		// Читаем и компилируем шейдеры
-		GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderPath, prelude);
-		GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderPath, prelude);
+		GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderPath);
+		GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderPath);
 
 		if (vertexShader == 0 || fragmentShader == 0) {
 			exit(EXIT_FAILURE);
@@ -116,25 +120,34 @@ namespace hack_game {
 		return shaderProgram;
 	}
 
+
 	GLuint createShaderProgram(const char* vertexShaderName, const char* fragmentShaderName) {
 		string vertexShaderPath   = string(SHADERS_DIR) + vertexShaderName;
 		string fragmentShaderPath = string(SHADERS_DIR) + fragmentShaderName;
-		return createShaderProgram0(vertexShaderPath.c_str(), fragmentShaderPath.c_str(), nullptr);
+		return createShaderProgram0(vertexShaderPath.c_str(), fragmentShaderPath.c_str());
 	}
 
-	static unique_ptr<const char[]> prelude = nullptr;
-
 	GLuint createAnimationShaderProgram(const char* vertexShaderName, const char* fragmentShaderName) {
-		if (prelude == nullptr) {
-			prelude = readFile(SHADERS_ANIMATION_DIR "common.glsl");
-		}
-
 		string vertexShaderPath   = string(SHADERS_ANIMATION_DIR) + vertexShaderName;
 		string fragmentShaderPath = string(SHADERS_ANIMATION_DIR) + fragmentShaderName;
-		return createShaderProgram0(vertexShaderPath.c_str(), fragmentShaderPath.c_str(), prelude);
+		return createShaderProgram0(vertexShaderPath.c_str(), fragmentShaderPath.c_str());
+	}
+
+
+	static string commonContent;
+
+	static const string& getCommonContent() {
+		static bool loaded = false;
+
+		if (!loaded) {
+			commonContent = readFile(SHADERS_DIR "common.glsl");
+			loaded = true;
+		}
+
+		return commonContent;
 	}
 
 	void onShadersLoaded() {
-		prelude.reset();
+		commonContent.clear();
 	}
 }

@@ -16,7 +16,7 @@ namespace hack_game {
 		explicit Texture(const char* path);
 
 		/// @brief Очищает все данные текстуры в памяти (но не в OpenGL!)
-		~Texture() noexcept;
+		~Texture();
 
 		/// @brief Работает также, как genGlTexture(GLint). filter по умолчанию GL_LINEAR
 		/// @return ID созданного объекта текстуры

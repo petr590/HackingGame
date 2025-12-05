@@ -31,10 +31,10 @@ namespace hack_game {
 	using Vertex = TexturedModel::Vertex;
 
 	struct TexturedModel::Vertex {
-		const glm::vec3 pos;
-		const glm::vec2 texCoord;
+		const vec3 pos;
+		const vec2 texCoord;
 
-		constexpr Vertex(const glm::vec3& pos, const glm::vec2& texCoord) noexcept:
+		constexpr Vertex(const vec3& pos, const vec2& texCoord) noexcept:
 				pos(pos), texCoord(texCoord) {}
 	};
 
@@ -135,7 +135,7 @@ namespace hack_game {
 	// Деструктор определён здесь не просто так. Дело в том, что этот деструктор вызывает деструкторы для векторов, а вектора вызывают
 	// деструкторы для своих элементов, что приводит к ошибке, если классы TexturedModel::Image и TexturedModel::Vertex ещё не определены.
 	// То есть деструктор должен быть определён в классе реализации, а не в заголовке
-	TexturedModel::~TexturedModel() noexcept {}
+	TexturedModel::~TexturedModel() {}
 
 
 	GLuint TexturedModel::createVertexArray() {
@@ -173,27 +173,6 @@ namespace hack_game {
 			glBindTexture(GL_TEXTURE_2D, textureIds[i]);
 		}
 
-		#ifndef NDEBUG
-		
-		GLuint query;
-		glGenQueries(1, &query);
-		glBeginQuery(GL_TIME_ELAPSED, query);
-
 		VAOModel::draw(shader);
-		
-		glEndQuery(GL_TIME_ELAPSED);
-		glFinish();
-
-		GLuint64 timeElapsed = 0;
-		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &timeElapsed);
-		printf("%u %lu\n", shader.getId(), timeElapsed);
-
-		glDeleteQueries(1, &query);
-
-		#else
-
-		VAOModel::draw(shader);
-
-		#endif
 	}
 }

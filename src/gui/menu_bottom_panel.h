@@ -1,13 +1,13 @@
 #ifndef HACK_GAME__GUI__MENU_BOTTOM_PANEL_H
 #define HACK_GAME__GUI__MENU_BOTTOM_PANEL_H
 
-#include "element.h"
+#include "gui_context.h"
 
 namespace hack_game {
 
-	class MenuBottomPanel: public Element {
+	class MenuBottomPanel {
 	public:
-		void draw(const GuiContext&) override;
+		void draw(const GuiContext&);
 	};
 }
 

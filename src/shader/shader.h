@@ -23,7 +23,7 @@ namespace hack_game {
 		explicit Shader(const char* name) noexcept;
 		Shader(const char* name, GLuint shaderProgram);
 		Shader(Shader&&);
-		~Shader() noexcept;
+		~Shader();
 
 		const char* getName() const noexcept {
 			return name;

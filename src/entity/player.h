@@ -10,6 +10,10 @@ namespace hack_game {
 	class Animation;
 
 	class Player final: public Damageable, public EntityWithPos {
+	public:
+		static constexpr float RADIUS = 0.02f;
+
+	private:
 		ShaderManager& shaderManager;
 		Camera camera;
 		const float speed;

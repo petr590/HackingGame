@@ -85,9 +85,13 @@ namespace hack_game {
 
 
 	MinionDestroyAnimation::MinionDestroyAnimation(shared_ptr<const EntityWithPos>&& entity, Level& level, ShaderManager& shaderManager) noexcept:
-			BillboardAnimation(std::move(entity), shaderManager.nullShader, DURATION, SIZE, Y_OFFSET, models::minionDestroyBillboard),
-			billboardShader (shaderManager.getShader("minionDestroyBillboard")),
-			flatShader      (shaderManager.getShader("minionDestroyFlat")),
+			FlatAndBillboardAnimation(
+				std::move(entity), shaderManager,
+				shaderManager.getShader("minionDestroyFlat"),
+				shaderManager.getShader("minionDestroyBillboard"),
+				DURATION, SIZE, Y_OFFSET,
+				models::minionDestroyBillboard
+			),
 			particleShader  (shaderManager.getShader("particleCube")),
 			angleNormal     (0.0f, 1.0f, 0.0f),
 			seed            (randomInt32()) {
@@ -114,14 +118,14 @@ namespace hack_game {
 		}
 	}
 
-	MinionDestroyAnimation::~MinionDestroyAnimation() noexcept {}
+	MinionDestroyAnimation::~MinionDestroyAnimation() {}
 
 
 	void MinionDestroyAnimation::tick(Level& level) {
 		BillboardAnimation::tick(level);
 
 		const Camera& camera = level.getPlayer()->getCamera();
-		angleNormal = glm::rotate(glm::normalize(camera.getPos() - camera.getTarget()), glm::radians(-90.0f), vec3(1.0f, 0.0f, 0.0f));
+		angleNormal = glm::normalize(glm::rotate(camera.getPos() - camera.getTarget(), glm::radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)));
 	}
 
 	void MinionDestroyAnimation::onRemove(Level& level) {
@@ -130,23 +134,13 @@ namespace hack_game {
 		}
 	}
 
-	void MinionDestroyAnimation::draw() const {
-		const float progress = time / duration;
-		
-		flatShader.use();
-		flatShader.setView(getView());
-		flatShader.setModel(glm::scale(Animation::getModelTransform(), vec3(0.3f)));
-		flatShader.setUniform("centerPos", getPos());
-		flatShader.setUniform("progress", progress);
-		model.draw(flatShader);
-		
-		billboardShader.use();
-		billboardShader.setView(getView());
-		billboardShader.setModel(BillboardAnimation::getModelTransform());
-		billboardShader.setUniform("centerPos", getPos());
+
+	mat4 MinionDestroyAnimation::getFlatShaderModelTransform() const {
+		return glm::scale(FlatAndBillboardAnimation::getFlatShaderModelTransform(), vec3(0.3f));
+	}
+
+	void MinionDestroyAnimation::setBillboardShaderUniforms() const {
 		billboardShader.setUniform("angleNormal", angleNormal);
-		billboardShader.setUniform("progress", progress);
 		billboardShader.setUniform("seed", seed);
-		model.draw(billboardShader);
 	}
 }
