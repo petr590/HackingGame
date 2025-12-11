@@ -6,8 +6,9 @@
 
 namespace hack_game {
 	namespace models {
-		ColoredModel plane    (0xd00000, "plane.obj");
-		ColoredModel platform (0xd0c8b5, "platform.obj");
+		ColoredModel plane    (0xD00000, "plane.obj");
+		ColoredModel platform (0xD0C8B5, "platform.obj");
+		ColoredModel walls    (0xC0BAB1, "walls.obj");
 
 		ColoredModel blackCube       (0x000000, "cube.obj");
 		ColoredModel breakableCube   (0x41403B, blackCube);

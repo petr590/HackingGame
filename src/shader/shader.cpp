@@ -36,18 +36,24 @@ namespace hack_game {
 
 
 	static uniforms_t createUniforms(GLuint id) {
-		GLint count;
+		GLint count, maxNameLen;
+
 		glGetProgramiv(id, GL_ACTIVE_UNIFORMS, &count);
+		glGetProgramiv(id, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxNameLen);
 
 		uniforms_t uniforms;
 		uniforms.reserve(count);
 
+		// Некоторые реализации OpenGL не принимают nullptr в качестве параметров.
+		// Поэтому на всякий случай лучше создать переменные для этого.
+		GLsizei unused1;
+		GLint unused2;
+
 		for (GLint i = 0; i < count; i++) {
-			const GLint maxNameLen = 64;
 			GLchar name[maxNameLen];
 			GLenum type;
 			
-			glGetActiveUniform(id, static_cast<GLuint>(i), maxNameLen, nullptr, nullptr, &type, name);
+			glGetActiveUniform(id, static_cast<GLuint>(i), maxNameLen, &unused1, &unused2, &type, name);
 			uniforms.emplace_back(string(name), Uniform(i, type));
 		}
 

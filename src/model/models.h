@@ -8,6 +8,7 @@ namespace hack_game {
 
 		extern ColoredModel	plane;    /// Прямоугольник от (-1, 0, -1) до (1, 0, 1)
 		extern ColoredModel	platform; /// Прямоугольник от (0, 0, 0) до (1, 0, 1)
+		extern ColoredModel	walls;    /// Стены
 
 		extern ColoredModel	blackCube;       /// Чёрный куб
 		extern ColoredModel	breakableCube;   /// Куб, который возможно сломать снарядами игрока

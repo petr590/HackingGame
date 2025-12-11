@@ -89,10 +89,6 @@ namespace hack_game {
 		if (player != nullptr) {
 			player->updateKeys();
 		}
-
-		if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
-			glfwSetWindowShouldClose(renderContext.getWindow(), GL_TRUE);
-		}
 		
 		if (ImGui::IsKeyPressed(ImGuiKey_F1)) {
 			paused = !paused;

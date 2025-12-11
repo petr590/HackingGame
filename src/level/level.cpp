@@ -7,6 +7,7 @@
 #include "entity/enemy.h"
 #include "entity/minion.h"
 #include "entity/platform.h"
+#include "entity/walls.h"
 
 // #include <boost/format.hpp>
 #include <fstream>
@@ -73,8 +74,6 @@ namespace hack_game {
 		readMap(shaderManager, path, object);
 		readEntities(shaderManager, path, object);
 		damageableEnemyEntities.push_back(enemy);
-
-		addEntityDirect(make_shared<Platform>(shaderManager.mainShader, vec2(map.width(), map.height()) * TILE_SIZE));
 	}
 
 
@@ -116,6 +115,13 @@ namespace hack_game {
 					addEntityDirect(move(block));
 				}
 			}
+		}
+
+		const bool infinityPlatform = object["infinityPlatform"];
+		addEntityDirect(make_shared<Platform>(shaderManager.mainShader, vec2(map.width(), map.height()) * TILE_SIZE, infinityPlatform));
+
+		if (infinityPlatform) {
+			addEntityDirect(make_shared<Walls>(shaderManager.mainShader));
 		}
 	}
 

@@ -87,6 +87,7 @@ add_executable(main
 	src/entity/minion.cpp
 	src/entity/damageable.cpp
 	src/entity/platform.cpp
+	src/entity/walls.cpp
 
 	src/entity/animation/animation.cpp
 	src/entity/animation/billboard_animation.cpp

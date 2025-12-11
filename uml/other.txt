@@ -1,0 +1,331 @@
+@startuml
+
+' Иерархия Model
+
+class Model {
+  -models: static std::vector<Model*>
+  +getModels(): static const std::vector<Model*>&
+  +Model()
+  +Model(Model: const&)
+  +operator: Model&)
+  +virtual ~Model()
+  +generateVertexArray()
+  +draw(Shader&) const
+}
+
+class VAOModel {
+  #indices: std::vector<GLuint>
+  #vertexArray: GLuint
+  +VAOModel()
+  +VAOModel(model: const VAOModel&)
+  +generateVertexArray()
+  +draw(shader: Shader&) const
+  #createVertexArray(): GLuint
+}
+
+class FrameModel {
+  -color: glm::vec3
+  -vertices: std::vector<glm::vec3>
+  +FrameModel(color: uint32_t, relativePath: const char*)
+  +draw(shader: Shader&) const
+  #createVertexArray(): GLuint
+}
+
+class PostprocessingModel {
+  -vertices: std::vector<Vertex>
+  +PostprocessingModel()
+  #createVertexArray(): GLuint
+}
+
+class ColoredModel {
+  -vertices: std::vector<Vertex>
+  -color: const glm::vec3
+  +ColoredModel(color: uint32_t, relativePath: const char*)
+  +ColoredModel(color: uint32_t, model: const& ColoredModel)
+  +getColor() const: const glm::vec3&
+  +createVertexArray() GLuint
+  +draw(shader: Shader&) const
+  +draw(shader: Shader&, color: const glm::vec3&) const
+}
+
+class TexturedModel {
+  -textures: std::vector<Texture>
+  -textureIds: std::vector<GLuint>
+  -vertices: std::vector<Vertex>
+  +TexturedModel(relativeModelPath: const char*, relativeTexturePaths: std::initializer_list<const char*>)
+  +draw(Shader&) const
+  #createVertexArray() GLuint
+}
+
+class CompositeModel {
+  -models: std::vector<Model*>
+  +CompositeModel(models: std::initializer_list<Model*>)
+  +generateVertexArray()
+  +draw(shader: Shader&) const
+}
+
+
+
+' Классы GUI
+
+class FadingObject {
+  -maxTime: float
+  -time: float
+  +FadingObject(maxTime: float, isMax: bool)
+  +updateFadeTime(deltaTime: float, add: bool)
+  +getFadeTime() const: float
+  +getFadeProgress() const: float
+}
+
+
+class Menu {
+  -shaderManager: ShaderManager&
+  -bottomPanel: MenuBottomPanel
+  -select: MenuSelect
+  -level: std::shared_ptr<Level>
+  -bgTextureId: const GLuint
+  +LIGHT_COLOR: static ImU32
+  +NORMAL_COLOR: static ImU32
+  +DARKER_COLOR: static ImU32
+  +DARK_COLOR: static ImU32
+  +SHADOW_COLOR: static ImU32
+  +SHADOW_OFFSET: static float
+  +POINTER_TEXTURE_SIZE: static ImVec2
+  +STRIPE1_START: static float
+  +STRIPE1_END: static float
+  +STRIPE2_START: static float
+  +STRIPE2_END: static float
+  +Menu(ShaderManager&, levelsCount: size_t)
+  +getFadeProgress() const
+  +getLevel() const: const std::shared_ptr<Level>&
+  +resetLevel()
+  +getPlayer() const: std::shared_ptr<Player>
+  +setLevelDeltaTime(deltaTime: float)
+  +loadLevel(path: const std::string&)
+  +draw(context: const GuiContext&): bool
+}
+
+class MenuSelect {
+  -menu: Menu&
+  -popup: SystemMessagePopup
+  -selectables: std::vector<Selectable>
+  -selected: size_t
+  +MenuSelect(menu: Menu&, count: size_t)
+  +draw(context: const GuiContext&)
+  -drawContent(context: const GuiContext&)
+}
+
+class MenuBottomPanel {
+  +draw(context: const GuiContext&)
+}
+
+class SystemMessagePopup {
+  -callback: callback_t
+  -yes: Selectable
+  -no: Selectable
+  -yesSelected: bool
+  +SystemMessagePopup()
+  +open(callback_t)
+  +draw(context: const GuiContext&)
+  -close()
+}
+
+class WinScreen {
+  +draw(context: const GuiContext&, winScreenTime: float)
+}
+
+' Shaders
+
+class Shader {
+  -name: const char*
+  -id: GLuint
+  -uniforms: uniforms_t
+  +Shader(name: const char*)
+  +Shader(name: const char*, shaderProgram: GLuint)
+  +Shader(shader: Shader&&)
+  +getName() const: const char*
+  +getId() const
+  +use()
+  +setUniform(name: const char*, val: const glm::mat4&, warn: bool)
+  +setUniform(name: const char*, val: const glm::vec3&, warn: bool)
+  +setUniform(name: const char*, val: const glm::vec2&, warn: bool)
+  +setUniform(name: const char*, val: float, warn: bool)
+  +setUniform(name: const char*, val: GLint, warn: bool)
+  +setUniform(name: const char*, val: GLuint, warn: bool)
+  +setModel(model: const glm::mat4&)
+  +setView(view: const glm::mat4&)
+  +setModelColor(modelColor: const glm::vec3&)
+}
+
+class ShaderManager {
+  -nullShader: Shader
+  -mainShader: Shader
+  -std::map<std::string_view, shaders: Shader>
+  -std::map<GLuint, shadersById: Shader*>
+  +ShaderManager(windowWidth: int, windowHeight: int, nullShader: Shader&&, mainShader: Shader&&, shaders: Shaders&&...)
+  +getShaders(): std::map<std::string_view, Shader>&
+  +getShadersById() const: const std::map<GLuint, Shader*>&
+  +getShader: Shader&(name: const char*)
+  +getShader: Shader&(id: GLuint)
+  +updateWindowSize(width: GLint, height: GLint)
+  -addShader(shader: Shader&&)
+  -initShaders(windowWidth: int, windowHeight: int)
+}
+
+
+' Другие классы
+
+class AABB {
+  +min: glm::vec2
+  +max: glm::vec2
+  +AABB(min: const glm::vec2&, max: const glm::vec2&)
+  +AABB(minX: float, minY: float, maxX: float, maxY: float)
+  +containsInclusive(point: const glm::vec2&) const: bool
+  +containsExclusive(point: const glm::vec2&) const: bool
+}
+
+class FramebufferInfo {
+  -sceneFramebuffer: GLuint
+  -sceneMsTexture: GLuint
+  -sceneRenderbuffer: GLuint
+  -sceneNoMsFramebuffer: GLuint
+  -sceneNoMsTexture: GLuint
+  -imGuiFramebuffer: GLuint
+  -imGuiTexture: GLuint
+}
+
+class InvalidLevelException {
+  -message: std::string
+  +InvalidLevelException(message: std::string)
+  what() const: const char*
+}
+
+enum Side {
+  PLAYER, ENEMY
+}
+
+enum Mode {
+  FADING, SOLID
+}
+
+class Camera {
+  -pos: glm::vec3
+  -target: glm::vec3
+  -view: glm::mat4
+  +Camera(pos: const glm::vec3&, target: const glm::vec3&)
+  getPos() const: const glm::vec3&
+  getTarget() const: const glm::vec3&
+  getView() const: const glm::mat4&
+  move(offset: const glm::vec3&)
+}
+
+class Texture {
+  -width: int
+  -height: int
+  -data: uint8_t*
+  +Texture(path: const char*)
+  +genGlTexture() const: GLuint
+  +genGlTexture(filter: GLint) const: GLuint
+  +bindGlTexture(textureId: GLuint) const
+  +bindGlTexture(textureId: GLuint, filter: GLint) const
+}
+
+
+class Map {
+  -data: std::vector<std::vector<ptr_t>>
+  +Map()
+  +Map(width: size_t, height: size_t)
+  +allocate(width: size_t, height: size_t)
+  +operator[](p: const glm::uvec2&): ptr_t&
+  +operator[](p: const glm::uvec2&) const: const ptr_t&
+  +operator[](x: size_t): std::vector<ptr_t>&
+  +operator[](x: size_t) const: const std::vector<ptr_t>&
+  +width() const
+  +height() const
+}
+
+class Level {
+  +map: Map
+  -player: std::shared_ptr<Player>
+  -enemy: std::shared_ptr<Enemy>
+  -opaqueEntityMap: EntityMap
+  -transparentEntityMap: EntityMap
+  -addedEntities: EntityVector
+  -removedEntities: EntityVector
+  -damageableEnemyEntities: std::vector<std::shared_ptr<Damageable>>
+  -deltaTime: float
+  -getVector(entity: const std::shared_ptr<Entity>&): EntityVector&
+  -addEntityDirect(std::shared_ptr<Entity>&&)
+  -readMap(shaderManager: ShaderManager&, path: const std::string&, object: const nlohmann::json&)
+  -readEntities(shaderManager: ShaderManager&, path: const std::string&, object: const nlohmann::json&)
+  +Level(shaderManager: ShaderManager&, path: const std::string&)
+  +getDeltaTime() const
+  +setDeltaTime(deltaTime: float)
+  +getPlayer() const: const std::shared_ptr<Player>&
+  +getEnemy() const: const std::shared_ptr<Enemy>&
+  +getMapPos(pos: const glm::vec2&) const: glm::uvec2
+  +getOpaqueEntityMap() const: const EntityMap&
+  +getTransparentEntityMap() const: const EntityMap&
+  +getDamageableEnemyEntities() const: const std::vector<std::shared_ptr<Damageable>>&
+  +addEntity(std: const::shared_ptr<Entity>&)
+  +removeEntity(std: const::shared_ptr<Entity>&)
+  +updateEntities()
+}
+
+class GuiContext {
+  -scale: ImVec2
+  -deltaTime: float
+  -pointerTextureId: const GLuint
+
+  +GuiContext();
+  +getScale() const: const ImVec2&
+  +getDeltaTime() const: float
+  +getPointerTextureId() const: GLuint
+  +setScale(scale: const ImVec2&)
+  +setDeltaTime(deltaTime: float)
+  +scaleX(x: float) const: float
+  +scaleY(y: float) const: float
+  +scaleX(x: float, y: float) const: ImVec2
+  +scaleY(x: float, y: float) const: ImVec2
+  +scaleVec(vec: const ImVec2&) const: ImVec2
+  +scaleVec(x: float, y: float) const: ImVec2
+}
+
+class RenderContext {
+  -window: GLFWwindow*
+  -imGuiMainContext: ImGuiContext*
+  -imGuiFpsContext: ImGuiContext*
+  -fbInfo: FramebufferInfo
+  -windowWidth: GLint
+  -windowHeight: GLint
+  -refreshRate: int
+  -RenderContext()
+  -RenderContext(renderContext: const RenderContext&)
+  +_getInstance(): const RenderContext&
+  +getWindow() const: GLFWwindow*
+  +getImGuiMainContext() const: ImGuiContext*
+  +getImGuiFpsContext() const: ImGuiContext*
+  +getFbInfo() const: const FramebufferInfo&
+  +getWindowWidth() const
+  +getWindowHeight() const
+  +getRefreshRate() const
+  +setWindowWidth(windowWidth: GLint)
+  +setWindowHeight(windowHeight: GLint)
+}
+
+
+
+VAOModel --|> Model
+FrameModel --|> VAOModel
+PostprocessingModel --|> VAOModel
+ColoredModel --|> VAOModel
+TexturedModel --|> VAOModel
+CompositeModel --|> Model
+
+InvalidLevelException --|> std::exception
+
+Menu --|> FadingObject
+SystemMessagePopup --|> FadingObject
+
+
+@enduml

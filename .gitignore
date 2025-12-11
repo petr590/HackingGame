@@ -3,3 +3,4 @@
 /release/
 .vscode/
 *.blend1
+/imgui.ini

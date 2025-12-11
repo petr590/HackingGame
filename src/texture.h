@@ -6,7 +6,7 @@
 namespace hack_game {
 
 	/// @brief Данный класс отвечает за загрузку текстуры и генерацию объекта текстуры в OpenGL
-	class Texture  {
+	class Texture {
 		int width, height;
 		uint8_t* data;
 

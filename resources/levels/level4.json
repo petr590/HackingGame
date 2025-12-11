@@ -1,0 +1,41 @@
+{
+	"width": 17,
+	"height": 17,
+	"map": [
+		"BBBBBBBBBBBBBBBBB",
+		"B               B",
+		"B               B",
+		"B               B",
+		"B               B",
+		"B               B",
+		"B     B B B     B",
+		"B               B",
+		"B     B   B     B",
+		"B               B",
+		"B     B B B     B",
+		"B               B",
+		"B               B",
+		"B               B",
+		"B               B",
+		"B               B",
+		"BBBBBBBBBBBBBBBBB"
+	],
+	
+	"entities": [
+		{
+			"type": "Player",
+			"pos": {"x": 8.5, "z": 2.5}
+		},
+		{
+			"type": "Enemy1",
+			"pos": {"x": 8.5, "z": 13.5}
+		},
+		
+		{ "type": "Minion", "pos": {"x": 3.5, "z": 8.5} },
+		{ "type": "Minion", "pos": {"x": 12.5, "z": 8.5} },
+		{ "type": "Minion", "pos": {"x": 4.5, "z": 9.5} },
+		{ "type": "Minion", "pos": {"x": 11.5, "z": 9.5} },
+		{ "type": "Minion", "pos": {"x": 5.5, "z": 11.5} },
+		{ "type": "Minion", "pos": {"x": 10.5, "z": 11.5} }
+	]
+}

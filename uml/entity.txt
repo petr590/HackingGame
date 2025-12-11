@@ -1,0 +1,289 @@
+@startuml
+
+' Общие классы Entity
+
+class Entity {
+  #Entity()
+  +getShaderProgram() const: GLuint
+  +tick(Level&)
+  +draw() const
+  +isTransparent() const: bool
+}
+
+class Damageable {
+  #side: Side
+  #hitpoints: hp_t
+  +_MAX_HP: hp_t
+  +Damageable(side: Side, hitpoints: hp_t)
+  +hasCollision(point: const glm::vec3&) const: bool
+  +damage(level: Level&, damage: hp_t)
+  +destroyed() const
+  +invulnerable() const
+  +getSide() const
+  #onDestroy(level: Level&)
+}
+
+class SimpleEntity {
+  #shader: Shader&
+  #model: const Model&
+
+  +SimpleEntity(shader: Shader&, model: const Model&)
+  +getShaderProgram() const: GLuint
+  +tick(level: Level&)
+  +draw() const
+  +getModelTransform() const: glm::mat4
+}
+
+class EntityWithPos {
+  +getPos() const: const glm::vec3&
+}
+
+
+' Конкретные реализации Entity
+
+class Block {
+  -coloredModel: const ColoredModel&
+  -damageAnimationTime: float
+  +pos: glm::uvec2
+  +Block(shader: Shader&, model: const ColoredModel&, hitpoints: hp_t, pos: const glm::uvec2&)
+  +_breakable(shader: Shader&, pos: const glm::uvec2&): std::shared_ptr<Block>
+  +_unbreakable(shader: Shader&, pos: const glm::uvec2&): std::shared_ptr<Block>
+  +getHitbox() const: AABB
+  +hasCollision(point: const glm::vec3&) const: bool
+  +damage(level: Level&, damage: hp_t)
+  +tick(level: Level&)
+  +draw() const
+  #onDestroy(level: Level&)
+}
+
+class Platform {
+  -scale: glm::vec2
+  +Platform(shader: Shader&, scale: const glm::vec2&, isInfinite: bool)
+  +getModelTransform() const: glm::mat4
+}
+
+class Player {
+  +_RADIUS: float
+  -shaderManager: ShaderManager&
+  -camera: Camera
+  -speed: float
+  -animation: std::shared_ptr<Animation>
+  -pos: glm::vec3
+  -angle: float
+  -targetAngle: float
+  -timeSinceLastBullet: float
+  -up: bool
+  -down: bool
+  -left: bool
+  -right: bool
+  -fire: bool
+  +Player(shaderManager: ShaderManager&, camera: const Camera&, speed: float, pos: const glm::vec3&)
+  +getPos() const: const glm::vec3&
+  +getCamera() const: const Camera&
+  +getShaderProgram() const: GLuint
+  +shared_from_this() const: std::shared_ptr<const Player>
+  +updateKeys()
+  +tick(level: Level&)
+  +draw() const
+  +hasCollision(point: const glm::vec3&) const: bool
+  +damage(level: Level&, damage: hp_t)
+  #onDestroy(level: Level&)
+  -updateAngle(targetAngle: float)
+  -move(level: Level&)
+}
+
+class Enemy {
+  +RADIUS: static float
+  #shaderManager: ShaderManager&
+  #coloredModel: const ColoredModel&
+  #animation: std::shared_ptr<Animation>
+  #bulletSpawnPeriod: const float
+  #pos: glm::vec3
+  #time: float
+  +Enemy(ShaderManager&, bulletSpawnPeriod: float, pos: const glm::vec3&)
+  +getPos() const: const glm::vec3&
+  +hasCollision(point: const glm::vec3&) const: bool
+  +damage(Level&, damage: hp_t)
+  +tick(Level&)
+  +draw() const
+  +getModelTransform() const: glm::mat4
+  +shared_from_this() const: std::shared_ptr<const Enemy>
+  #spawnBullets(Level&)
+}
+
+class Enemy1 {
+  #angle: float
+  #spawnUnbreakable: bool
+  +Enemy1(shaderManager: ShaderManager&, pos: const glm::vec3&)
+  +tick(level: Level&)
+  #spawnBullets(level: Level&)
+}
+
+
+class Minion {
+  -shaderManager: ShaderManager&
+  -pos: glm::vec3
+  -angle: float
+  -time: float
+  +Minion(ShaderManager&, pos: const glm::vec3&)
+  +getPos() const: const glm::vec3&
+  +shared_from_this() const: std::shared_ptr<const Minion>
+  +tick(Level&)
+  +getModelTransform() const: glm::mat4
+  +hasCollision(point: const glm::vec3&) const: bool
+  #onDestroy(Level&)
+}
+
+
+class Bullet {
+  #angle: float
+  #velocity: glm::vec3
+  #pos: glm::vec3
+  +Bullet(shader: Shader&, model: const Model&, angle: float, velocity: const glm::vec3&, pos: const glm::vec3&)
+  +getPos() const: const glm::vec3&
+  +tick(Level&)
+  +getModelTransformx() constenable_shared_from_entity
+  #checkCollision(Level&): bool
+}
+
+class PlayerBullet {
+  +PlayerBullet(shader: Shader&, angle: float, velocity: const glm::vec3&, pos: const glm::vec3&)
+  #checkCollision(Level&): bool
+}
+
+class EnemyBullet {
+  +_DEFAULT_SPEED: float
+  +EnemyBullet(shader: Shader&, unbreakable: bool, velocity: const glm::vec3&, pos: const glm::vec3&)
+  +getModelTransform() const: glm::mat4
+  +hasCollision(point: const glm::vec3&) const: bool
+  #onDestroy(Level&)
+  #checkCollision(Level&): bool
+}
+
+
+' Animation
+
+class Animation {
+  #entity: const std::shared_ptr<const EntityWithPos>
+  #size: const float
+  #duration: const float
+  #yOffset: const float
+  #time: float
+  +Animation(entity: std::shared_ptr<const EntityWithPos>&&, shader: Shader&, duration: float, size: float, yOffset: float, model: Model&)
+  +getTime() const
+  +getProgress() const
+  +isFinished() const
+  +isTransparent() const
+  +tick(Level&)
+  +draw() const
+  +getModelTransform() const: glm::mat4
+  onRemove(level: Level&)
+  getPos() const: glm::vec3
+}
+
+class BillboardAnimation {
+  -view: glm::mat4
+  
+  +getView() const: const glm::mat4&
+  +tick(level: Level&)
+  +getModelTransform() const: glm::mat4
+}
+
+class FlatAndBillboardAnimation {
+  #flatShader: Shader&
+  #billboardShader: Shader&
+  +FlatAndBillboardAnimation(entity: std::shared_ptr<const EntityWithPos>&&, shaderManager: ShaderManager&, flatShader: Shader&, billboardShader: Shader&, duration: float, size: float, yOffset: float, model: Model&)
+  +draw() const
+  #getFlatShaderModelTransform() const: glm::mat4
+  #getBillboardShaderModelTransform() const: glm::mat4
+  setFlatShaderUniforms() const
+  setBillboardShaderUniforms() const
+}
+
+class PlayerDamageAnimation {
+  +PlayerDamageAnimation(EntityWithPos: std::shared_ptr<const>&&, ShaderManager&)
+}
+
+
+class PlayerDestroyAnimation {
+  -cubes: std::vector<Cube>
+  -angleNormal: glm::vec3
+  -seed: const GLint
+  +PlayerDestroyAnimation(entity: std::shared_ptr<const EntityWithPos>&&, shaderManager: ShaderManager&)
+  +tick(level: Level&)
+  #onRemove(level: Level&)
+  #getFlatShaderModelTransform() const: glm::mat4
+  #setFlatShaderUniforms() const
+  #setBillboardShaderUniforms() const
+}
+
+class EnemyDestroyAnimation {
+  -particleShader: Shader&
+  -fadingCubes: std::vector<Cube>
+  -solidCubes: std::vector<Cube>
+  -frameCubes: std::vector<Cube>
+  -seed: const GLint
+  +EnemyDestroyAnimation(entity: std::shared_ptr<const EntityWithPos>&&, shaderManager: ShaderManager&)
+  +tick(level: Level&)
+  +draw() const
+  #onRemove(level: Level&)
+  #setFlatShaderUniforms() const
+}
+
+class EnemyDamageAnimation {
+  +EnemyDamageAnimation(entity: std::shared_ptr<const EntityWithPos>&&, shaderManager: ShaderManager&)
+}
+
+class MinionDestroyAnimation {
+  -cubes: std::vector<std::shared_ptr<Cube>>
+  -particleShader: Shader&
+  -angleNormal: glm::vec3
+  -seed: int32_t
+  +MinionDestroyAnimation(entity: std::shared_ptr<const EntityWithPos>&&, level: Level&, shaderManager: ShaderManager&)
+  +tick(level: Level&)
+  #getFlatShaderModelTransform() const: glm::mat4
+  #setBillboardShaderUniforms() const
+  #onRemove(level: Level&)
+}
+
+
+' Иерархия
+
+class enable_shared_from_this<T>
+enable_shared_from_entity <-- enable_shared_from_this
+note right of enable_shared_from_entity : enable_shared_from_this<String>
+
+Damageable --|> Entity
+Damageable --|> enable_shared_from_entity
+SimpleEntity --|> Entity
+EntityWithPos --|> Entity
+
+Block --|> SimpleEntity
+Block --|> Damageable
+Platform --|> SimpleEntity
+Player --|> Damageable
+Player --|> EntityWithPos
+Enemy --|> SimpleEntity
+Enemy --|> Damageable
+Enemy --|> EntityWithPos
+Enemy1 --|> Enemy
+Minion --|> SimpleEntity
+Minion --|> Damageable
+Minion --|> EntityWithPos
+Bullet --|> SimpleEntity
+Bullet --|> enable_shared_from_entity
+PlayerBullet --|> Bullet
+EnemyBullet --|> Bullet
+EnemyBullet --|> Damageable
+
+Animation --|> SimpleEntity
+Animation --|> enable_shared_from_entity
+BillboardAnimation --|> Animation
+FlatAndBillboardAnimation --|> BillboardAnimation
+PlayerDamageAnimation --|> Animation
+PlayerDestroyAnimation --|> FlatAndBillboardAnimation
+EnemyDestroyAnimation --|> FlatAndBillboardAnimation
+EnemyDamageAnimation --|> BillboardAnimation
+MinionDestroyAnimation --|> FlatAndBillboardAnimation
+
+@enduml
